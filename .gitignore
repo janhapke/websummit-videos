@@ -1,0 +1,6 @@
+/docker
+/node_modules
+/config.js
+/database.sqlite
+/notes.txt
+/talks.json

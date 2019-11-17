@@ -1,0 +1,22 @@
+{
+  "name": "websummit-videos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "videos.js",
+  "scripts": {
+    "import-videos": "node src/video-importer/import.js",
+    "import-schedule": "node src/schedule-importer/import.js",
+    "match": "node src/matcher/match.js",
+    "export": "node src/exporter/export.js",
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "handlebars": "^4.5.2",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5",
+    "slugify": "^1.3.6",
+    "sqlite3": "^4.1.0",
+    "vimeo": "^2.1.1"
+  }
+}
