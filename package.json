@@ -7,9 +7,9 @@
     "import-videos": "node src/video-importer/import.js",
     "import-schedule": "node src/schedule-importer/import.js",
     "match": "node src/matcher/match.js",
-    "export": "node src/exporter/export.js",
+    "export": "node src/exporter/export.js"
   },
-  "author": "",
+  "author": "Jan Hapke",
   "license": "ISC",
   "dependencies": {
     "handlebars": "^4.5.2",

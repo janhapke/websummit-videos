@@ -7,6 +7,8 @@ That's why I created this little tool that fetches data from the Web Summit API 
 
 The output is a long list of Web Summit Talks together with the videos where I could match them.
 
+Find the result here: [Web Summit Videos](https://janhapke.github.io/websummit-videos/)
+
 ## Development Setup
 ### Overview
 The page is generated through these steps:
