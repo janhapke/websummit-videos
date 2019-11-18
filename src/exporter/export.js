@@ -50,6 +50,48 @@ function loadMatchingVideos(talkId) {
     });
 };
 
+function loadUnmatchedVideos() {
+    return new Promise((resolve, reject) => {
+        db.all(
+            `
+                SELECT DISTINCT *
+                FROM videos
+                WHERE release_time >= '2019-11-01'
+                AND uri NOT IN (SELECT DISTINCT video_uri FROM matches)
+            `,
+            [],
+            (error, rows) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(rows);
+            }
+        );
+    });
+}
+
+function loadStats() {
+    return new Promise((resolve, reject) => {
+        db.all(
+            `
+                SELECT
+                    CURRENT_DATE AS last_update,
+                    (SELECT COUNT(*) FROM talks) AS num_talks,
+                    (SELECT COUNT(DISTINCT talk_id) FROM matches) AS num_matched_talks,
+                    (SELECT COUNT(*) FROM videos where release_time >= '2019-11-01') AS num_videos,
+                    (SELECT COUNT(DISTINCT video_uri) FROM matches) AS num_matched_videos
+            `,
+            [],
+            (error, rows) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(rows);
+            }
+        );
+    });
+}
+
 loadTalkIds()
 .then(ids => Promise.all(
     ids.map(
@@ -98,22 +140,23 @@ loadTalkIds()
     });
 })
 .then(talks => {
-    fs.readFile('src/exporter/talks.hbs', 'utf8', (error, source) => {
+    console.debug('exporting sessions...');
+    return new Promise((resolve, reject) => {
+        fs.readFile('src/exporter/sessions.hbs', 'utf8', (error, source) => {
 
-        const template = Handlebars.compile(source);
-        Handlebars.registerHelper('date', function (string) {
-            return string.substr(0, 10);
-        });
-        Handlebars.registerHelper('sort', function (arr) {
-            return arr.sort();
-        });
-        Handlebars.registerHelper('formatPresenter', function (p) {
-            return p.name + ' (' + p.companyName + ')';
-        });
+            const template = Handlebars.compile(source);
+            Handlebars.registerHelper('date', function (string) {
+                return string.substr(0, 10);
+            });
+            Handlebars.registerHelper('sort', function (arr) {
+                return arr.sort();
+            });
+            Handlebars.registerHelper('formatPresenter', function (p) {
+                return p.name + ' (' + p.companyName + ')';
+            });
 
-        const html = template({talks: talks});
+            const html = template({talks: talks});
 
-        return new Promise((resolve, reject) => {
             fs.writeFile('index.html', html, (err) => {
                 if (err) {
                     reject(err);
@@ -122,4 +165,46 @@ loadTalkIds()
             });
         });
     });
-});
+})
+.then(loadUnmatchedVideos)
+.then(videos => {
+    console.debug('exporting videos...');
+    return new Promise((resolve, reject) => {
+        fs.readFile('src/exporter/videos.hbs', 'utf8', (error, source) => {
+
+            const template = Handlebars.compile(source);
+            Handlebars.registerHelper('nl2br', function (string) {
+                return (string || '').replace("\n", "<br />\n");
+            });
+
+            const html = template({videos: videos});
+
+            fs.writeFile('videos.html', html, (err) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(videos);
+            });
+        });
+    });
+})
+.then(loadStats)
+.then(stats => {
+    console.debug('exporting about...');
+    return new Promise((resolve, reject) => {
+        fs.readFile('src/exporter/about.hbs', 'utf8', (error, source) => {
+
+            const template = Handlebars.compile(source);
+
+            const html = template({stats: stats[0]});
+
+            fs.writeFile('about.html', html, (err) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(stats);
+            });
+        });
+    });
+})
+;
