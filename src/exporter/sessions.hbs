@@ -56,21 +56,21 @@
             </thead>
             <tbody>
                 {{#each talks}}
-                    <tr>
-                        <td>{{stage}}</td>
-                        <td>{{date date}}</td>
+                    <tr id="{{id}}">
+                        <td class="stage">{{stage}}</td>
+                        <td class="date">{{date date}}</td>
                         <td>
                             <h3 class="h5">{{title}}</h3>
                             {{description}}
                         </td>
-                        <td>
+                        <td class="presenters">
                             <ul class="list-unstyled">
                                 {{#each presenters}}
                                     <li>{{formatPresenter .}}</li>
                                 {{/each}}
                             </ul>
                         </td>
-                        <td>
+                        <td class="videos">
                             <ul class="list-unstyled">
                                 {{#each videos}}
                                     <li><a href="{{link}}" title="{{name}}">{{name}}</a></li>
