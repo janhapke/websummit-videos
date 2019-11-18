@@ -89,18 +89,21 @@ setupDatabase()
 .then(result => {
     const manualMatches = [
         { talk_id: '62e2e333-7dd6-45e3-9fda-60e06af8d01b', video_uri: '/videos/370976186'},
+        { talk_id: '8ab58a18-3d4c-4d2b-8a8b-fe2983ab6113', video_uri: '/videos/371722923'},
+        { talk_id: '0fb8a55b-7f8f-45a2-91ef-d82a226dcad6', video_uri: '/videos/371532933'},
+        { talk_id: '0235c182-6a0f-440a-bbe7-f9aab349aa69', video_uri: '/videos/371369579'},
+        { talk_id: '400a7bd5-bc1e-425b-a395-e77e92d42878', video_uri: '/videos/371339532'},
     ];
     const matchedTalkIds = [];
     manualMatches.forEach(match => {
         const matchedTalks = result.unmatchedTalks.filter(talk => talk.id == match.talk_id);
         if (matchedTalks.length != 1) {
-            console.error('manual match found more than 1 talk', match);
+            console.error('manual match did not find 1 talk', match, matchedTalks);
             return;
         }
         const talk = matchedTalks[0];
         const matchedVideos = result.unmatchedVideos.filter(video => video.uri == match.video_uri);
         if (matchedVideos.length != 1) {
-            console.error('manual match found more than 1 video', match);
             return;
         }
         const matchingVideo = matchedVideos[0];
