@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 });
 
 function slugifyString(string) {
-    return slugify(string.toLowerCase(), {remove: /[*,\?´+~.()'"!:@]/g}).trim();
+    return slugify(string.replace('Q+A', 'Q&A').toLowerCase(), {remove: /[*,\?´+~.()'"!:@]/g}).trim();
 }
 
 const sqlite3 = require('sqlite3').verbose();
@@ -87,6 +87,38 @@ setupDatabase()
     }
 })
 .then(result => {
+    const manualMatches = [
+        { talk_id: '62e2e333-7dd6-45e3-9fda-60e06af8d01b', video_uri: '/videos/370976186'},
+    ];
+    const matchedTalkIds = [];
+    manualMatches.forEach(match => {
+        const matchedTalks = result.unmatchedTalks.filter(talk => talk.id == match.talk_id);
+        if (matchedTalks.length != 1) {
+            console.error('manual match found more than 1 talk', match);
+            return;
+        }
+        const talk = matchedTalks[0];
+        const matchedVideos = result.unmatchedVideos.filter(video => video.uri == match.video_uri);
+        if (matchedVideos.length != 1) {
+            console.error('manual match found more than 1 video', match);
+            return;
+        }
+        const matchingVideo = matchedVideos[0];
+        result.matches.push({
+            talk_id: talk.id,
+            video_uri: matchingVideo.uri
+        });
+        matchedTalkIds.push(talk.id);
+        result.unmatchedVideos = result.unmatchedVideos.filter(video => video.uri != matchingVideo.uri);
+    });
+    result.unmatchedTalks = result.unmatchedTalks.filter(talk => matchedTalkIds.indexOf(talk.id) === -1);
+    console.log('match manually');
+    console.log('matched talks (this pass)', matchedTalkIds.length);
+    console.log('unmatched talks', result.unmatchedTalks.length/*, result.unmatchedTalks */);
+    console.log('unmatched videos', result.unmatchedVideos.length);
+    return result;
+})
+.then(result => {
     const matchedTalkIds = [];
     result.unmatchedTalks.forEach(talk => {
         const matchingVideos = result.unmatchedVideos.filter(video => video.name_slug == talk.title_slug);
@@ -121,7 +153,7 @@ setupDatabase()
             return;
         }
 
-        const secondPassMatchingVideos = matchingVideos.filter(video => slugifyString(video.description.split('\n')[0]) == slugifyString(presenters.map(presenter => presenter.name).join(' ')));
+        const secondPassMatchingVideos = matchingVideos.filter(video => slugifyString((video.description || '').split('\n')[0]) == slugifyString(presenters.map(presenter => presenter.name).join(' ')));
         if (secondPassMatchingVideos.length !== 1) {
             // no match or multiple matches
             return;
