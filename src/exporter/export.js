@@ -16,15 +16,38 @@ process.on('SIGTERM', () => {
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database(config.database.filename);
 
+const talkFilter = `
+WHERE title NOT LIKE 'Featured venue: %'
+AND title NOT LIKE 'ATM %'
+AND title NOT LIKE 'Food Truck %'
+AND title NOT LIKE 'Night Summit %'
+AND title NOT LIKE 'Workshop %'
+AND title NOT LIKE 'Bus and Tram Station %'
+AND stage != 'Roundtables'
+AND stage != 'Pink Street'
+AND stage != 'Registration'
+AND stage != 'Waterfront'
+AND stage != 'Away from the stage'
+AND stage NOT LIKE 'Taxi drop off%'
+AND stage NOT LIKE 'Train station%'
+AND stage NOT LIKE 'Workshop _'
+AND stage NOT LIKE '% FIL _'
+AND stage NOT LIKE '% PAV _'
+`;
+
 function loadTalkIds() {
     return new Promise((resolve, reject) => {
-        db.all('SELECT DISTINCT id FROM talks', [], (error, rows) => {
-            if (error) {
-                return reject(error);
+        db.all(
+            `SELECT DISTINCT id FROM talks ${talkFilter}`,
+            [],
+            (error, rows) => {
+                if (error) {
+                    return reject(error);
+                }
+                const talks = rows.map(row => row.id);
+                resolve(talks);
             }
-            const talks = rows.map(row => row.id);
-            resolve(talks);
-        });
+        );
     });
 };
 
@@ -76,7 +99,7 @@ function loadStats() {
             `
                 SELECT
                     CURRENT_DATE AS last_update,
-                    (SELECT COUNT(*) FROM talks) AS num_talks,
+                    (SELECT COUNT(*) FROM talks ${talkFilter}) AS num_talks,
                     (SELECT COUNT(DISTINCT talk_id) FROM matches) AS num_matched_talks,
                     (SELECT COUNT(*) FROM videos where release_time >= '2019-11-01') AS num_videos,
                     (SELECT COUNT(DISTINCT video_uri) FROM matches) AS num_matched_videos
