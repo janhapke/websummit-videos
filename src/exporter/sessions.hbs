@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <title>Web Summit 2019 Videos</title>
+    <style type="text/css">
+        .presenters { font-size: 90%; }
+        .title-desc h3 a, h3 a:hover, h3a:focus { color: inherit; }
+    </style>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -47,20 +51,45 @@
         <table class="table table-sm table-hover" id="sessions">
             <thead>
                 <tr>
-                    <th>Stage</th>
-                    <th>Date</th>
-                    <th>Title and Description</th>
-                    <th>Presenters</th>
-                    <th>Video(s)</th>
+                    <th style="width: 10rem">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Stage
+                            </button>
+                            <div class="dropdown-menu" id="filter-stages"></div>
+                        </div>
+                    </th>
+                    <th style="width: 6rem">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Date
+                            </button>
+                            <div class="dropdown-menu" id="filter-dates"></div>
+                        </div>
+                    </th>
+                    <th><button type="button" class="btn btn-outline-dark" disabled>Title and Description</button></th>
+                    <th style="width: 15rem"><button type="button" class="btn btn-outline-dark" disabled>Presenters</button></th>
+                    <th style="width: 15rem">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Video(s)
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#" onclick="return filterByVideo(null);">All</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" onclick="return filterByVideo(true);">With Videos</a>
+                                <a class="dropdown-item" href="#" onclick="return filterByVideo(false);">Without Videos</a>
+                            </div>
+                        </div>
+                    </th>
                 </tr>
-            </thead>
             <tbody>
                 {{#each talks}}
                     <tr id="{{id}}">
                         <td class="stage">{{stage}}</td>
                         <td class="date">{{date date}}</td>
-                        <td>
-                            <h3 class="h5">{{title}}</h3>
+                        <td class="title-desc">
+                            <h3 class="h5"><a href="#{{id}}">{{title}}</a></h3>
                             {{description}}
                         </td>
                         <td class="presenters">
@@ -87,5 +116,61 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        window.webSummitSessionFilters = {};
+        function applyFilters(filters) {
+            console.log(filters);
+            $('#sessions tr').show();
+            if (filters.stage) {
+                $('#sessions tbody tr').each((i, row) => { if ($('.stage', row).html() != filters.stage) { $(row).hide() } });
+            }
+            if (filters.date) {
+                $('#sessions tbody tr').each((i, row) => { if ($('.date', row).html() != filters.date) { $(row).hide() } })
+            }
+            if (filters.video === false) {
+                $('#sessions tbody tr').each((i, row) => { if ($('.videos ul li', row).length > 0) { $(row).hide() } })
+            } else if (filters.video === true) {
+                $('#sessions tbody tr').each((i, row) => { if ($('.videos ul li', row).length == 0) { $(row).hide() } })
+            }
+        }
+        function filterByStage(stage) {
+            window.webSummitSessionFilters.stage = stage;
+            applyFilters(window.webSummitSessionFilters);
+            return false;
+        }
+        function filterByDate(date) {
+            window.webSummitSessionFilters.date = date;
+            applyFilters(window.webSummitSessionFilters);
+            return false;
+        }
+        function filterByVideo(video) {
+            window.webSummitSessionFilters.video = video;
+            applyFilters(window.webSummitSessionFilters);
+            return false;
+        }
+        $(function() {
+            var allStages = Array.from(new Set($('#sessions .stage').map((i, stage) => $(stage).html()))).sort();
+            $('#filter-stages').html('')
+                .append(`<a class="dropdown-item" href="#" onclick="return filterByStage(null);"">All Stages</a>`)
+                .append(`<div class="dropdown-divider"></div>`);
+            allStages.forEach(stage => {
+                $('#filter-stages').append(
+                    `<a class="dropdown-item" href="#" onclick="return filterByStage('${stage}');">${stage}</a>`
+                );
+            });
+
+            var allDates = Array.from(new Set($('#sessions .date').map((i, date) => $(date).html()))).sort();
+            $('#filter-dates').html('')
+                .append(`<a class="dropdown-item" href="#" onclick="return filterByDate(null);"">All Dates</a>`)
+                .append(`<div class="dropdown-divider"></div>`);
+                allDates.forEach(date => {
+                $('#filter-dates').append(
+                    `<a class="dropdown-item" href="#" onclick="return filterByDate('${date}');">${date}</a>`
+                );
+            });
+        });
+    </script>
+
   </body>
 </html>
