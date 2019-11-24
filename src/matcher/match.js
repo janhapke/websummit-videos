@@ -99,7 +99,6 @@ setupDatabase()
         { talk_id: '400a7bd5-bc1e-425b-a395-e77e92d42878', video_uri: '/videos/371339532'},
         { talk_id: 'a7d9e021-9883-4e4e-ae22-a38b51b80d16', video_uri: '/videos/373891121'},
         { talk_id: '26aadd95-c7d6-40b3-be13-2715f2834038', video_uri: '/videos/371897900'},
-        { talk_id: 'eff5c796-43de-42c0-b9ff-1befa3a74233', video_uri: '/videos/371340483'},
         { talk_id: 'dd835a59-1ee3-4de2-9e48-3d8d3ca61e01', video_uri: '/videos/371335329'},
         { talk_id: '7c7842c9-3e52-4ef8-bfde-6c626eee847e', video_uri: '/videos/371288305'},
         { talk_id: '8cb35e11-4183-4853-9d46-c1dca65a3b36', video_uri: '/videos/371209481'},
@@ -117,22 +116,16 @@ setupDatabase()
         { talk_id: '9cc0570c-29d4-4b56-8620-8432dfc0cd5d', video_uri: '/videos/371578468'},
         { talk_id: '9cc0570c-29d4-4b56-8620-8432dfc0cd5d', video_uri: '/videos/371164541'},
         { talk_id: '9d714d63-b884-4c31-aee7-36124f71ac27', video_uri: '/videos/371402653'},
-        { talk_id: '0cf0a640-509c-4e4c-8645-36186884d20e', video_uri: '/videos/371399149'},
         { talk_id: 'a0ce662b-cb37-41b9-9e74-9e0b781f25bc', video_uri: '/videos/371378992'},
         { talk_id: '4652c0b0-9b47-49fd-b0a6-fc1b237b7b09', video_uri: '/videos/371360451'},
         { talk_id: '4652c0b0-9b47-49fd-b0a6-fc1b237b7b09', video_uri: '/videos/371159432'},
-        { talk_id: '4652c0b0-9b47-49fd-b0a6-fc1b237b7b09', video_uri: '/videos/371158545'},
         { talk_id: 'a31a5083-bf9c-4ad9-a8ea-fe20e825f116', video_uri: '/videos/371111134'},
         { talk_id: '5b65234e-3e3a-41f0-afa8-337f56ecef08', video_uri: '/videos/371356964'},
         { talk_id: 'ed708ac7-e837-47f1-bb25-7bc45a81e4ad', video_uri: '/videos/371356808'},
         { talk_id: 'ed708ac7-e837-47f1-bb25-7bc45a81e4ad', video_uri: '/videos/371348950'},
-        { talk_id: '812f199f-9fc9-4214-9191-5e4a8a78d4df', video_uri: '/videos/371352647'},
         { talk_id: '812f199f-9fc9-4214-9191-5e4a8a78d4df', video_uri: '/videos/371278301'},
-        { talk_id: '812f199f-9fc9-4214-9191-5e4a8a78d4df', video_uri: '/videos/371102883'},
         { talk_id: 'ea893807-3848-4738-aa69-d1cc9b73e190', video_uri: '/videos/371352298'},
         { talk_id: '457f714b-695c-43f3-8226-29f0902597d2', video_uri: '/videos/371349291'},
-        { talk_id: '457f714b-695c-43f3-8226-29f0902597d2', video_uri: '/videos/371274231'},
-        { talk_id: '457f714b-695c-43f3-8226-29f0902597d2', video_uri: '/videos/371140746'},
         { talk_id: 'f8285afa-6bd0-44af-8054-00b419dbdaf9', video_uri: '/videos/371175475'},
         { talk_id: 'd02fc0ee-1086-409c-8759-6f28e208c52a', video_uri: '/videos/371120734'},
         { talk_id: '0bf64b65-4621-468c-a8ea-741ffab94a56', video_uri: '/videos/371107036'},
@@ -142,6 +135,13 @@ setupDatabase()
         { talk_id: '25040c2a-0eab-45a3-a291-341c4bc5d09a', video_uri: '/videos/371200543'},
         { talk_id: 'd514f782-9271-46f4-b677-86c60e79a5c2', video_uri: '/videos/371394864'},
         { talk_id: 'ea03f8f8-84e1-47a9-afee-1829384c3b79', video_uri: '/videos/371629321'},
+        { talk_id: '4930ed09-80e7-4ba5-8d3d-ddf2e9d7f812', video_uri: '/videos/374927089' },
+        { talk_id: '4052c0c2-50ec-4875-ac66-cf28b2014572', video_uri: '/videos/371541141'},
+        { talk_id: '7f1dd639-8f39-470b-bbeb-b20c8f9f7106', video_uri: '/videos/374920855'},
+        { talk_id: '16886558-af9f-4e02-9596-3585f14d0455', video_uri: '/videos/371399149'},
+        { talk_id: '0cf0a640-509c-4e4c-8645-36186884d20e', video_uri: '/videos/374889770'},
+        { talk_id: 'aa094c33-196d-477b-a283-f05025de2dfb', video_uri: '/videos/371691177'},
+        { talk_id: '88d43ad8-c396-434a-9b4f-ecea0ab0ea09', video_uri: '/videos/370981739'},
     ];
     const matchedTalkIds = [];
     manualMatches.forEach(match => {
@@ -245,45 +245,73 @@ setupDatabase()
 .then(result => {
     const matchedTalkIds = [];
     result.unmatchedTalks.forEach(talk => {
-        if (talk.title_slug.toLowerCase().indexOf('opening-remarks') == -1 && talk.title_slug.toLowerCase().indexOf('breakout-startups') == -1) {
+        if (
+            talk.title_slug.toLowerCase().indexOf('opening-remarks') == -1
+            && talk.title_slug.toLowerCase().indexOf('breakout-startups') == -1
+            && talk.title_slug.toLowerCase().indexOf('startup-showcase') == -1
+        ) {
             return;
         }
-        const matchingVideos = result.unmatchedVideos.filter(video => video.name_slug.toLowerCase().indexOf('opening-remarks') !== -1 || video.name_slug.toLowerCase().indexOf('breakout-startups') !== -1);
+        const matchingVideos = result.unmatchedVideos.filter(video =>
+            video.name_slug.toLowerCase().indexOf('opening-remarks') !== -1
+            || video.name_slug.toLowerCase().indexOf('breakout-startups') !== -1
+            || video.name_slug.toLowerCase().indexOf('startup-showcase') !== -1
+        );
         if (matchingVideos.length <= 1) {
             // can only process multiple matches
             return;
         }
+
         const presenters = JSON.parse(talk.presenters);
-        if (presenters.length !== 1) {
-            // can only process single presenters
-            return;
-        }
-
-        // check if presenter appears in first line of video description
-        let secondPassMatchingVideos = matchingVideos
-            .filter(video => 
-                slugifyString((video.description || '').replace(/^with /i, '').split('\n')[0]) == slugifyString(presenters.map(presenter => presenter.name).join(' '))
+        if (presenters.length == 1) {
+            // check if presenter appears in first line of video description
+            let secondPassMatchingVideos = matchingVideos
+                .filter(video => 
+                    slugifyString((video.description || '').replace(/^with /i, '').split('\n')[0]) == slugifyString(presenters.map(presenter => presenter.name).join(' '))
+                );
+            // if presenter matches multiple, check if stage name appears at start of video name
+            if (secondPassMatchingVideos.length > 1) {
+                const stageSlug = slugifyString(talk.stage).toLowerCase();
+                secondPassMatchingVideos = secondPassMatchingVideos
+                .filter(video => 
+                    video.name_slug.toLowerCase().substr(0, stageSlug.length) == stageSlug
+                );
+            }
+            if (secondPassMatchingVideos.length !== 1) {
+                // no match or multiple matches
+                return;
+            }
+    
+            const matchingVideo = secondPassMatchingVideos[0];
+            result.matches.push({
+                talk_id: talk.id,
+                video_uri: matchingVideo.uri
+            });
+            matchedTalkIds.push(talk.id);
+            result.unmatchedVideos = result.unmatchedVideos.filter(video => video.uri != matchingVideo.uri);
+        } else {
+            // check if presenter appears in first line of video description
+            const talkPresenters = presenters.map(presenter => slugifyString(presenter.name));
+            let secondPassMatchingVideos = matchingVideos
+                .filter(video => {
+                    const videoPresenters = (video.description || '').split('\n')[0].replace(/^with /i, '').replace(/ and /i, ', ').split(/, ?/).map(name => slugifyString(name));
+                    const matchingPresenters = videoPresenters.filter(videoPresenter => talkPresenters.indexOf(videoPresenter) !== -1);
+                    const matchRate = matchingPresenters.length / Math.max(talkPresenters.length, videoPresenters.length);
+                    return matchRate > 0.7;
+                }
             );
-        // if presenter matches multiple, check if stage name appears at start of video name
-        if (secondPassMatchingVideos.length > 1) {
-            const stageSlug = slugifyString(talk.stage).toLowerCase();
-            secondPassMatchingVideos = secondPassMatchingVideos
-            .filter(video => 
-                video.name_slug.toLowerCase().substr(0, stageSlug.length) == stageSlug
-            );
-        }
-        if (secondPassMatchingVideos.length !== 1) {
-            // no match or multiple matches
-            return;
-        }
 
-        const matchingVideo = secondPassMatchingVideos[0];
-        result.matches.push({
-            talk_id: talk.id,
-            video_uri: matchingVideo.uri
-        });
-        matchedTalkIds.push(talk.id);
-        result.unmatchedVideos = result.unmatchedVideos.filter(video => video.uri != matchingVideo.uri);
+            if (secondPassMatchingVideos.length == 1) {
+                const matchingVideo = secondPassMatchingVideos[0];
+                // console.log('=====> second pass match', talk, matchingVideo);
+                result.matches.push({
+                    talk_id: talk.id,
+                    video_uri: matchingVideo.uri
+                });
+                matchedTalkIds.push(talk.id);
+                result.unmatchedVideos = result.unmatchedVideos.filter(video => video.uri != matchingVideo.uri);
+            }
+        }
     });
     result.unmatchedTalks = result.unmatchedTalks.filter(talk => matchedTalkIds.indexOf(talk.id) === -1);
     console.log('match via presenter');
