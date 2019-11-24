@@ -1,4 +1,5 @@
 const slugify = require('slugify');
+const { DateTime } = require('luxon');
 
 const config = require('../../config');
 
@@ -13,7 +14,7 @@ process.on('SIGTERM', () => {
 });
 
 function slugifyString(string) {
-    return slugify(string.replace('Q+A', 'Q&A').toLowerCase(), {remove: /[*,\?´+~.()'"!:@]/g}).trim();
+    return slugify(string.replace('Q+A', 'Q&A').toLowerCase(), {remove: /[*,\/\?´+~.()'"!:@]/g}).trim();
 }
 
 const sqlite3 = require('sqlite3').verbose();
@@ -37,7 +38,7 @@ function setupDatabase() {
 
 function loadTalks() {
     return new Promise((resolve, reject) => {
-        db.all('SELECT DISTINCT id, stage, title, presenters FROM talks', [], (error, rows) => {
+        db.all('SELECT DISTINCT id, stage, title, description, presenters, start_time, end_time FROM talks', [], (error, rows) => {
             if (error) {
                 return reject(error);
             }
@@ -47,7 +48,10 @@ function loadTalks() {
                     stage: row.stage,
                     title: row.title,
                     title_slug: slugifyString(row.title),
+                    description: row.description,
                     presenters: row.presenters,
+                    start_time: row.start_time,
+                    end_time: row.end_time,
                 };
             });
             resolve(talks);
@@ -166,6 +170,7 @@ setupDatabase()
     console.log('matched talks (this pass)', matchedTalkIds.length);
     console.log('unmatched talks', result.unmatchedTalks.length/*, result.unmatchedTalks */);
     console.log('unmatched videos', result.unmatchedVideos.length);
+    console.log('======================');
     return result;
 })
 .then(result => {
@@ -187,12 +192,63 @@ setupDatabase()
     console.log('matched talks (this pass)', matchedTalkIds.length);
     console.log('unmatched talks', result.unmatchedTalks.length/*, result.unmatchedTalks */);
     console.log('unmatched videos', result.unmatchedVideos.length);
+    console.log('======================');
     return result;
 })
 .then(result => {
     const matchedTalkIds = [];
     result.unmatchedTalks.forEach(talk => {
-        const matchingVideos = result.unmatchedVideos.filter(video => video.name_slug.toLowerCase().indexOf('opening-remarks') !== -1 && talk.title_slug.toLowerCase().indexOf('opening-remarks') !== -1);
+        if (talk.title_slug.indexOf('startup-showcase') == -1) {
+            return;
+        }
+        const title = slugifyString(talk.stage).replace(/(startup-showcase)-(\d)/i, '$1-stage-$2');
+        const startTime = DateTime.fromFormat(talk.start_time, 'HH:mm:ss').toFormat('hmm(a)?').toLowerCase();
+        const endTime = DateTime.fromFormat(talk.end_time, 'HH:mm:ss').toFormat('hmma').toLowerCase();
+        const searchExp = new RegExp(title + '-' + startTime + '-' + endTime);
+        const matchingVideos = result.unmatchedVideos.filter(video => video.name_slug.toLowerCase().indexOf('startup-showcase') !== -1).filter(video => video.name_slug.match(searchExp) != null);
+        if (matchingVideos.length == 0) {
+            return;
+        }
+        if (matchingVideos.length == 1) {
+            const matchingVideo = matchingVideos[0];
+            result.matches.push({
+                talk_id: talk.id,
+                video_uri: matchingVideo.uri
+            });
+            matchedTalkIds.push(talk.id);
+            result.unmatchedVideos = result.unmatchedVideos.filter(video => video.uri != matchingVideo.uri);
+        } else {
+            const theme = talk.description.match(/this hour focuses on (the )?(.*?),/i);
+            if (!theme) {
+                return;
+            }
+            const secondPassMatchingVideos = matchingVideos.filter(video => video.description.toLowerCase().match(new RegExp('theme: (the )?' + theme[2])));
+            if (secondPassMatchingVideos.length == 1) {
+                const matchingVideo = secondPassMatchingVideos[0];
+                result.matches.push({
+                    talk_id: talk.id,
+                    video_uri: matchingVideo.uri
+                });
+                matchedTalkIds.push(talk.id);
+                result.unmatchedVideos = result.unmatchedVideos.filter(video => video.uri != matchingVideo.uri);
+            }
+        }
+    });
+    result.unmatchedTalks = result.unmatchedTalks.filter(talk => matchedTalkIds.indexOf(talk.id) === -1);
+    console.log('match time slot');
+    console.log('matched talks (this pass)', matchedTalkIds.length);
+    console.log('unmatched talks', result.unmatchedTalks.length/*, result.unmatchedTalks */);
+    console.log('unmatched videos', result.unmatchedVideos.length);
+    console.log('======================');
+    return result;
+})
+.then(result => {
+    const matchedTalkIds = [];
+    result.unmatchedTalks.forEach(talk => {
+        if (talk.title_slug.toLowerCase().indexOf('opening-remarks') == -1 && talk.title_slug.toLowerCase().indexOf('breakout-startups') == -1) {
+            return;
+        }
+        const matchingVideos = result.unmatchedVideos.filter(video => video.name_slug.toLowerCase().indexOf('opening-remarks') !== -1 || video.name_slug.toLowerCase().indexOf('breakout-startups') !== -1);
         if (matchingVideos.length <= 1) {
             // can only process multiple matches
             return;
@@ -234,7 +290,7 @@ setupDatabase()
     console.log('matched talks (this pass)', matchedTalkIds.length);
     console.log('unmatched talks', result.unmatchedTalks.length); //, result.unmatchedTalks);
     console.log('unmatched videos', result.unmatchedVideos.length);
-    console.log(result.unmatchedVideos);
+    console.log('======================');
     return result;
 })
 .then(result => {
@@ -264,6 +320,7 @@ setupDatabase()
     console.log('matched talks (this pass)', matchedTalkIds.length);
     console.log('unmatched talks', result.unmatchedTalks.length/*, result.unmatchedTalks */);
     console.log('unmatched videos', result.unmatchedVideos.length);
+    console.log('======================');
     return result;
 })
 .then(result => {
