@@ -149,6 +149,7 @@ setupDatabase()
         const talk = matchedTalks[0];
         const matchedVideos = result.unmatchedVideos.filter(video => video.uri == match.video_uri);
         if (matchedVideos.length != 1) {
+            console.error('manual match did not find 1 video', match, matchedVideos);
             return;
         }
         const matchingVideo = matchedVideos[0];
@@ -191,7 +192,7 @@ setupDatabase()
 .then(result => {
     const matchedTalkIds = [];
     result.unmatchedTalks.forEach(talk => {
-        const matchingVideos = result.unmatchedVideos.filter(video => video.name_slug == talk.title_slug);
+        const matchingVideos = result.unmatchedVideos.filter(video => video.name_slug.toLowerCase().indexOf('opening-remarks') !== -1 && talk.title_slug.toLowerCase().indexOf('opening-remarks') !== -1);
         if (matchingVideos.length <= 1) {
             // can only process multiple matches
             return;
@@ -202,7 +203,19 @@ setupDatabase()
             return;
         }
 
-        const secondPassMatchingVideos = matchingVideos.filter(video => slugifyString((video.description || '').split('\n')[0]) == slugifyString(presenters.map(presenter => presenter.name).join(' ')));
+        // check if presenter appears in first line of video description
+        let secondPassMatchingVideos = matchingVideos
+            .filter(video => 
+                slugifyString((video.description || '').replace(/^with /i, '').split('\n')[0]) == slugifyString(presenters.map(presenter => presenter.name).join(' '))
+            );
+        // if presenter matches multiple, check if stage name appears at start of video name
+        if (secondPassMatchingVideos.length > 1) {
+            const stageSlug = slugifyString(talk.stage).toLowerCase();
+            secondPassMatchingVideos = secondPassMatchingVideos
+            .filter(video => 
+                video.name_slug.toLowerCase().substr(0, stageSlug.length) == stageSlug
+            );
+        }
         if (secondPassMatchingVideos.length !== 1) {
             // no match or multiple matches
             return;
