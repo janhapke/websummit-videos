@@ -142,6 +142,7 @@ setupDatabase()
         { talk_id: '0cf0a640-509c-4e4c-8645-36186884d20e', video_uri: '/videos/374889770'},
         { talk_id: 'aa094c33-196d-477b-a283-f05025de2dfb', video_uri: '/videos/371691177'},
         { talk_id: '88d43ad8-c396-434a-9b4f-ecea0ab0ea09', video_uri: '/videos/370981739'},
+        { talk_id: 'e059363d-1a02-4c6e-9503-1de3712c9787', video_uri: '/videos/374175343'},
     ];
     const matchedTalkIds = [];
     manualMatches.forEach(match => {
@@ -257,8 +258,7 @@ setupDatabase()
             || video.name_slug.toLowerCase().indexOf('breakout-startups') !== -1
             || video.name_slug.toLowerCase().indexOf('startup-showcase') !== -1
         );
-        if (matchingVideos.length <= 1) {
-            // can only process multiple matches
+        if (matchingVideos.length == 0) {
             return;
         }
 
