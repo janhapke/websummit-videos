@@ -122,13 +122,12 @@
     <script type="text/javascript">
         window.webSummitSessionFilters = {};
         function applyFilters(filters) {
-            console.log(filters);
             $('#sessions tr').show();
             if (filters.stage) {
-                $('#sessions tbody tr').each((i, row) => { if ($('.stage', row).html() != filters.stage) { $(row).hide() } });
+                $('#sessions tbody tr').each((i, row) => { if ($('.stage', row).text() != filters.stage) { $(row).hide() } });
             }
             if (filters.date) {
-                $('#sessions tbody tr').each((i, row) => { if ($('.date', row).html() != filters.date) { $(row).hide() } })
+                $('#sessions tbody tr').each((i, row) => { if ($('.date', row).text() != filters.date) { $(row).hide() } })
             }
             if (filters.video === false) {
                 $('#sessions tbody tr').each((i, row) => { if ($('.videos ul li', row).length > 0) { $(row).hide() } })
