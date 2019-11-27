@@ -1,5 +1,11 @@
 const slugify = require('slugify');
 const { DateTime } = require('luxon');
+const editDistance = require("edit-distance")
+
+function calculateEditDistance(stringA, stringB) {
+    const lev = editDistance.levenshtein(stringB, stringA, () => 1, () => 1, (a,b) => a !== b ? 1 : 0);
+    return lev.distance
+}
 
 const config = require('../../config');
 
@@ -29,7 +35,17 @@ function setupDatabase() {
                     talk_id VARCHAR(36),
                     video_uri VARCHAR(255)
                 )
-            `, () => {
+            `);
+            db.run('DROP TABLE IF EXISTS slide_matches');
+            db.run(`
+                CREATE TABLE slide_matches (
+                    talk_id VARCHAR(36),
+                    slide_slug VARCHAR(255)
+                )
+            `, (error) => {
+                if (error) {
+                    return reject(error);
+                }
                 resolve();
             });
         });
@@ -79,16 +95,90 @@ function loadVideos() {
     });
 }
 
+function loadAws() {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT DISTINCT slug, title, link, image_url FROM aws', [], (error, rows) => {
+            if (error) {
+                return reject(error);
+            }
+            const aws = rows.map(row => {
+                return {
+                    slug: row.slug,
+                    title: row.title,
+                    link: row.link,
+                    image_url: row.image_url
+                };
+            });
+            resolve(aws);
+        });
+    });
+}
+
 setupDatabase()
-.then(() => Promise.all([loadTalks(), loadVideos()]))
+.then(() => Promise.all([loadTalks(), loadVideos(), loadAws()]))
 .then(data => {
     return {
         allTalks: data[0],
         allVideos: data[1],
+        allSlides: data[2],
         unmatchedTalks: data[0],
         unmatchedVideos: data[1],
+        unmatchedSlides: data[2],
         matches: [],
+        slideMatches: [],
     }
+})
+.then(result => {
+    const matchedSlideSlugs = [];
+    let awsSessions = result.unmatchedTalks.filter(talk => talk.stage == 'AWS Developer Workshops');
+    result.unmatchedSlides.forEach(slide => {
+        const exactMatches = awsSessions.filter(talk => talk.title_slug == slide.slug)
+        exactMatches.forEach(matchingTalk => {
+            result.slideMatches.push({
+                talk_id: matchingTalk.id,
+                talk_title_slug: matchingTalk.title_slug,
+                slide_slug: slide.slug
+            });
+            awsSessions = awsSessions.filter(talk => talk.id != matchingTalk.id);
+        });
+        if (exactMatches.length > 0) {
+            matchedSlideSlugs.push(slide.slug);
+        }
+    });
+
+    console.debug('matched exactly', matchedSlideSlugs.length);
+    console.debug('unmatched sessions', awsSessions.length);
+    console.debug('unmatched slides', result.unmatchedSlides.length);
+
+    let distances = result.unmatchedSlides.map(slide =>
+        awsSessions.map(talk => {
+            return {
+                talk_title_slug: talk.title_slug,
+                slide_slug: slide.slug,
+                distance: calculateEditDistance(talk.title_slug, slide.slug)
+            }
+        })
+    ).reduce((a, b) => a.concat(b), []).sort((a, b) => a.distance - b.distance);
+    const maxIterations = distances.length;
+    for (let i = 0; i < maxIterations && distances.length > 0; ++i) {
+        const distance = distances[0];
+        const matches = awsSessions.filter(talk => talk.title_slug == distance.talk_title_slug);
+        matches.forEach(match => {
+            result.slideMatches.push({
+                talk_id: match.id,
+                talk_title_slug: distance.talk_title_slug,
+                slide_slug: distance.slide_slug
+            });
+        });
+        awsSessions = awsSessions.filter(talk => talk.title_slug != distance.talk_title_slug);
+        distances = distances.filter(cur => cur.talk_title_slug !== distance.talk_title_slug && cur.slide_slug !== distance.slide_slug).sort((a, b) => a.distance - b.distance);
+        matchedSlideSlugs.push(distance.slide_slug);
+    }
+    result.unmatchedSlides = result.unmatchedSlides.filter(slide => matchedSlideSlugs.indexOf(slide.slug) == -1);
+    // const distances = result.unmatchedSlides.map(slide => awsSessions.map(talk => { return { talk: talk.title_slug, slide: slide.slug, distance: calculateEditDistance(talk.title_slug, slide.slug) } }));
+    // console.debug(distances);
+    // throw 'Whatever!';
+    return result;
 })
 .then(result => {
     const manualMatches = [
@@ -351,25 +441,56 @@ setupDatabase()
     console.log('======================');
     return result;
 })
-.then(result => {
-    result.matches.forEach(match => {
-        db.run(
-            `
-                INSERT INTO matches
-                (talk_id, video_uri)
-                VALUES
-                (?, ?)
-            `
-            ,
-            [
-                match.talk_id,
-                match.video_uri
-            ],
-            (error) => {
-                if (error) {
-                    throw error;
-                }
-            }
-        );
-    })
-});
+.then(result =>
+    Promise.all(
+        result.matches.map(match =>
+            new Promise((resolve, reject) => {
+                db.run(
+                    `
+                        INSERT INTO matches
+                        (talk_id, video_uri)
+                        VALUES
+                        (?, ?)
+                    `
+                    ,
+                    [
+                        match.talk_id,
+                        match.video_uri
+                    ],
+                    (error) => {
+                        if (error) {
+                            reject(error);
+                        }
+                        resolve();
+                    }
+                );
+            })
+        )
+    ).then(() => result)
+)
+.then(result => 
+    Promise.all(
+        result.slideMatches.map(match => 
+            new Promise((resolve, reject) => {
+                db.run(
+                    `
+                        INSERT INTO slide_matches
+                        (talk_id, slide_slug)
+                        VALUES
+                        (?, ?)
+                    `
+                    ,
+                    [
+                        match.talk_id,
+                        match.slide_slug
+                    ],
+                    (error) => {
+                        if (error) {
+                            throw error;
+                        }
+                    }
+                );
+            })
+        )
+    ).then(() => result)
+);

@@ -74,13 +74,13 @@
                     <th style="width: 15rem">
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Video(s)
+                                Video(s)/Slides
                             </button>
                             <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item" href="#" onclick="return filterByVideo(null);">All</a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#" onclick="return filterByVideo(true);">With Videos</a>
-                                <a class="dropdown-item" href="#" onclick="return filterByVideo(false);">Without Videos</a>
+                                <a class="dropdown-item" href="#" onclick="return filterByVideo(true);">With Videos/Slides</a>
+                                <a class="dropdown-item" href="#" onclick="return filterByVideo(false);">Without Videos/Slides</a>
                             </div>
                         </div>
                     </th>
@@ -102,9 +102,12 @@
                             </ul>
                         </td>
                         <td class="videos">
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled videos">
                                 {{#each videos}}
                                     <li><a href="{{link}}" title="{{name}}" target="_blank">{{name}}</a></li>
+                                {{/each}}
+                                {{#each slides}}
+                                    <li>Slides: <a href="{{link}}" title="{{title}}" target="_blank">{{title}}</a></li>
                                 {{/each}}
                             </ul>
                         </td>

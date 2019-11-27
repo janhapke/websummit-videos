@@ -6,12 +6,15 @@
   "scripts": {
     "import-videos": "node src/video-importer/import.js",
     "import-schedule": "node src/schedule-importer/import.js",
+    "import-aws": "node src/aws-importer/import.js",
     "match": "node src/matcher/match.js",
     "export": "node src/exporter/export.js"
   },
   "author": "Jan Hapke",
   "license": "ISC",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "edit-distance": "^1.0.2",
     "handlebars": "^4.5.2",
     "luxon": "^1.21.2",
     "request": "^2.88.0",

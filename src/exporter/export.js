@@ -75,6 +75,17 @@ function loadMatchingVideos(talkId) {
     });
 };
 
+function loadMatchingSlides(talkId) {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT * FROM slide_matches LEFT JOIN aws ON (slide_matches.slide_slug = aws.slug) WHERE slide_matches.talk_id = ?', [talkId], (error, rows) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(rows);
+        });
+    });
+};
+
 function loadUnmatchedVideos() {
     return new Promise((resolve, reject) => {
         db.all(
@@ -101,10 +112,12 @@ function loadStats() {
             `
                 SELECT
                     CURRENT_DATE AS last_update,
-                    (SELECT COUNT(*) FROM talks ${talkFilter}) AS num_talks,
+                    (SELECT COUNT(DISTINCT id) FROM talks ${talkFilter}) AS num_talks,
                     (SELECT COUNT(DISTINCT talk_id) FROM matches) AS num_matched_talks,
                     (SELECT COUNT(*) FROM videos where release_time >= '2019-11-01') AS num_videos,
-                    (SELECT COUNT(DISTINCT video_uri) FROM matches) AS num_matched_videos
+                    (SELECT COUNT(DISTINCT video_uri) FROM matches) AS num_matched_videos,
+                    (SELECT COUNT(*) FROM aws) AS num_slides,
+                    (SELECT COUNT(DISTINCT slide_slug) FROM slide_matches) AS num_matched_slides
             `,
             [],
             (error, rows) => {
@@ -123,6 +136,7 @@ loadTalkIds()
         talkId => Promise.all([
             loadTalkDetails(talkId),
             loadMatchingVideos(talkId),
+            loadMatchingSlides(talkId),
         ])
     )
 ))
@@ -130,6 +144,7 @@ loadTalkIds()
     data => {
         const talkDetails = data[0];
         const videos = data[1];
+        const slides = data[2];
         return {
             id: talkDetails.id,
             title: talkDetails.title,
@@ -151,6 +166,7 @@ loadTalkIds()
                     pic_large: video.pic_large,
                 }
             }),
+            slides: slides,
         }
     })
 )
