@@ -24,8 +24,12 @@ module.exports = class PersistStream extends Stream.Writable {
                         topics JSON,
                         presenters JSON
                     )
-                `, () => {
-                    resolve();
+                `, (error) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
                 });
             });
         });

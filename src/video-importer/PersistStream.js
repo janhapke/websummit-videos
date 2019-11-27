@@ -23,8 +23,12 @@ module.exports = class PersistStream extends Stream.Writable {
                         pic_medium VARCHAR(255),
                         pic_large VARCHAR(255)
                     )
-                `, () => {
-                    resolve();
+                `, (error) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
                 });
             });
         });
