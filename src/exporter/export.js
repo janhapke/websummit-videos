@@ -1,4 +1,5 @@
 const fs = require('fs');
+const crypto = require('crypto');
 const Handlebars = require('handlebars');
 
 const config = require('../../config');
@@ -130,6 +131,13 @@ function loadStats() {
     });
 }
 
+function filterPresenter(presenter) {
+    if (crypto.createHash('md5').update(presenter.name).digest('hex') == '72374a349128f28a8b807e8568a1fc8d') {
+        return false;
+    }
+    return true;
+}
+
 loadTalkIds()
 .then(ids => Promise.all(
     ids.map(
@@ -153,7 +161,7 @@ loadTalkIds()
             start_time: talkDetails.start_time,
             end_time: talkDetails.end_time,
             topics: JSON.parse(talkDetails.topics),
-            presenters: JSON.parse(talkDetails.presenters),
+            presenters: JSON.parse(talkDetails.presenters).filter(filterPresenter),
             description: talkDetails.description,
             videos: videos.map(video => {
                 return {
