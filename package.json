@@ -15,7 +15,7 @@
   "dependencies": {
     "cheerio": "^0.22.0",
     "edit-distance": "^1.0.2",
-    "handlebars": "^4.7.6",
+    "handlebars": "^4.7.7",
     "luxon": "^1.21.2",
     "request": "^2.88.0",
     "request-promise": "^4.2.6",
