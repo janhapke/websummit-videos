@@ -13,7 +13,7 @@
   "author": "Jan Hapke",
   "license": "ISC",
   "dependencies": {
-    "cheerio": "^0.22.0",
+    "cheerio": "^1.0.0-rc.12",
     "edit-distance": "^1.0.2",
     "handlebars": "^4.7.7",
     "luxon": "^1.21.2",
