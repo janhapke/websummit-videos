@@ -20,7 +20,7 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.6",
     "slugify": "^1.3.6",
-    "sqlite3": "^4.2.0",
+    "sqlite3": "^5.1.6",
     "vimeo": "^2.1.1"
   }
 }
